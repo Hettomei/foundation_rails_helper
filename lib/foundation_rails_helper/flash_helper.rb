@@ -8,12 +8,12 @@ module FoundationRailsHelper
     # </div>
     KEY_MATCHING = {
       :notice  => :success,
-      :info    => :warning,
-      :failure => :error,
-      :alert   => :error,
+      :info    => :secondary,
+      :failure => :alert,
+      :alert   => :alert,
     }
     def display_flash_messages
-      flash.inject "" do |message, (key, value)| 
+      flash.inject "" do |message, (key, value)|
         message += content_tag :div, :class => "alert-box #{KEY_MATCHING[key] || key}" do
           (value + link_to("x", "#", :class => :close)).html_safe
         end
