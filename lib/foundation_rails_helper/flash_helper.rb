@@ -11,6 +11,7 @@ module FoundationRailsHelper
       :info    => :secondary,
       :failure => :alert,
       :alert   => :alert,
+      :error   => :alert,
     }
     def display_flash_messages
       flash.inject "" do |message, (key, value)|
