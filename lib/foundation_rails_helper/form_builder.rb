@@ -3,7 +3,7 @@ require 'action_view/helpers'
 module FoundationRailsHelper
   class FormBuilder < ActionView::Helpers::FormBuilder
     include ActionView::Helpers::TagHelper
-    %w(file_field email_field text_field text_area number_field).each do |method_name|
+    %w(file_field email_field text_field text_area telephone_field phone_field url_field number_field).each do |method_name|
       define_method(method_name) do |*args|
         attribute = args[0]
         options   = args[1] || {}
@@ -14,7 +14,7 @@ module FoundationRailsHelper
     end
 
     def check_box(attribute, options = {})
-      custom_label(attribute, options[:label] || attribute.to_s.humanize, options[:label_options]) do
+      custom_label(attribute, options[:label], options[:label_options]) do
         options.delete(:label)
         options.delete(:label_options)
         super(attribute, options)
@@ -44,9 +44,9 @@ module FoundationRailsHelper
       end
     end
 
-    def date_select(attribute, options = {})
-      field attribute, options do |options|
-        super(attribute, {}, options.merge(:autocomplete => :off))
+    def date_select(attribute, options = {}, html_options = {})
+      field attribute, html_options do |html_options|
+        super(attribute, options, html_options.merge(:autocomplete => :off))
       end
     end
 
@@ -77,18 +77,26 @@ module FoundationRailsHelper
     end
 
   private
+    def has_error?(attribute)
+      !object.errors[attribute].blank?
+    end
+
     def error_for(attribute, options = {})
       class_name = "error"
       class_name += " #{options[:class]}" if options[:class]
-      content_tag(:small, object.errors[attribute].join(', '), :class => class_name) unless object.errors[attribute].blank?
+      content_tag(:small, object.errors[attribute].join(', '), :class => class_name) if has_error?(attribute)
     end
 
     def custom_label(attribute, text, options, &block)
-      has_error = !object.errors[attribute].blank?
+      if text == false
+        text = ""
+      elsif text.nil?
+        text = object.class.human_attribute_name(attribute)
+      end
       text = block.call.html_safe + text if block_given?
       options ||= {}
       options[:class] ||= ""
-      options[:class] += ' red' if has_error
+      options[:class] += " error" if has_error?(attribute)
       label(attribute, text, options)
     end
 
@@ -100,9 +108,11 @@ module FoundationRailsHelper
     end
 
     def field(attribute, options, &block)
-      html = custom_label(attribute, options[:label], options[:label_options])
+      html = ''.html_safe
+      html = custom_label(attribute, options[:label], options[:label_options]) if false != options[:label]
       options[:class] ||= "medium"
       options[:class] = "#{options[:class]} input-text"
+      options[:class] += " error" if has_error?(attribute)
       options.delete(:label)
       options.delete(:label_options)
       html += yield(options)
